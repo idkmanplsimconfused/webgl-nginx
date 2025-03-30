@@ -43,6 +43,21 @@ Invoke-WebRequest -Uri "https://raw.githubusercontent.com/idkmanplsimconfused/we
 .\install.ps1
 ```
 
+## Using the Pre-built Docker Image
+
+You can pull the pre-built Docker image directly from GitHub Container Registry:
+
+```bash
+# Pull the image
+docker pull ghcr.io/idkmanplsimconfused/webgl-nginx:latest
+
+# Run it with default settings
+docker run -d --name webgl-nginx -p 80:80 -p 443:443 ghcr.io/idkmanplsimconfused/webgl-nginx:latest
+
+# Or run with custom domain and HTTPS redirection setting
+docker run -d --name webgl-nginx -p 80:80 -p 443:443 -e DOMAIN="yourdomain.com" -e FORCE_HTTPS=1 ghcr.io/idkmanplsimconfused/webgl-nginx:latest
+```
+
 ## Manual Setup
 
 If you prefer to clone the repository manually:

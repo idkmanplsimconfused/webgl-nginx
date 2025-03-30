@@ -10,9 +10,18 @@ if ! command -v docker &> /dev/null; then
     exit 1
 fi
 
-# Ensure entrypoint script has proper Unix line endings
-echo "Ensuring entrypoint script has proper line endings..."
-cat > docker-entrypoint.sh << 'EOF'
+# Ask if user wants to build or use prebuilt image
+read -p "Do you want to use the pre-built image from GitHub Container Registry? (y/N): " USE_PREBUILT
+if [[ $USE_PREBUILT =~ ^[Yy]$ ]]; then
+    PREBUILT=1
+else
+    PREBUILT=0
+fi
+
+if [ "$PREBUILT" -eq 0 ]; then
+    # Ensure entrypoint script has proper Unix line endings
+    echo "Ensuring entrypoint script has proper line endings..."
+    cat > docker-entrypoint.sh << 'EOF'
 #!/bin/sh
 set -e
 
@@ -79,7 +88,8 @@ sed -i "s/\${FORCE_HTTPS}/$FORCE_HTTPS/g" /etc/nginx/conf.d/default.conf
 # Execute the original command
 exec "$@"
 EOF
-chmod +x docker-entrypoint.sh
+    chmod +x docker-entrypoint.sh
+fi
 
 # Ask for domain (optional)
 read -p "Enter your domain name (leave empty to use public IP or localhost): " DOMAIN
@@ -100,16 +110,24 @@ fi
 HTTP_PORT=${HTTP_PORT:-80}
 HTTPS_PORT=${HTTPS_PORT:-443}
 
-# Build Docker image
-echo "Building Docker image..."
-docker build -t webgl-nginx .
+if [ "$PREBUILT" -eq 1 ]; then
+    # Pull the prebuilt image
+    echo "Pulling Docker image from GitHub Container Registry..."
+    docker pull ghcr.io/idkmanplsimconfused/webgl-nginx:latest
+    IMAGE_NAME="ghcr.io/idkmanplsimconfused/webgl-nginx:latest"
+else
+    # Build Docker image
+    echo "Building Docker image..."
+    docker build -t webgl-nginx .
+    IMAGE_NAME="webgl-nginx"
+fi
 
 # Run Docker container
 echo "Starting container..."
 if [ -z "$DOMAIN" ]; then
-    docker run -d --name webgl-nginx -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -e FORCE_HTTPS=$FORCE_HTTPS webgl-nginx
+    docker run -d --name webgl-nginx -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -e FORCE_HTTPS=$FORCE_HTTPS $IMAGE_NAME
 else
-    docker run -d --name webgl-nginx -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -e DOMAIN="$DOMAIN" -e FORCE_HTTPS=$FORCE_HTTPS webgl-nginx
+    docker run -d --name webgl-nginx -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -e DOMAIN="$DOMAIN" -e FORCE_HTTPS=$FORCE_HTTPS $IMAGE_NAME
 fi
 
 # Get container IP

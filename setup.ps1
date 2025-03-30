@@ -9,9 +9,18 @@ try {
     exit 1
 }
 
-# Create entrypoint script with proper Unix line endings
-Write-Host "Creating entrypoint script with proper line endings..." -ForegroundColor Yellow
-$entrypointContent = @'
+# Ask if user wants to build or use prebuilt image
+$USE_PREBUILT = Read-Host "Do you want to use the pre-built image from GitHub Container Registry? (y/N)"
+if ($USE_PREBUILT -match "^[Yy]$") {
+    $PREBUILT = $true
+} else {
+    $PREBUILT = $false
+}
+
+if (-not $PREBUILT) {
+    # Create entrypoint script with proper Unix line endings
+    Write-Host "Creating entrypoint script with proper line endings..." -ForegroundColor Yellow
+    $entrypointContent = @'
 #!/bin/sh
 set -e
 
@@ -79,9 +88,10 @@ sed -i "s/\${FORCE_HTTPS}/$FORCE_HTTPS/g" /etc/nginx/conf.d/default.conf
 exec "$@"
 '@
 
-# Write content with Unix line endings
-$utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
-[System.IO.File]::WriteAllText("$pwd\docker-entrypoint.sh", $entrypointContent, $utf8NoBomEncoding)
+    # Write content with Unix line endings
+    $utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
+    [System.IO.File]::WriteAllText("$pwd\docker-entrypoint.sh", $entrypointContent, $utf8NoBomEncoding)
+}
 
 # Ask for domain (optional)
 $DOMAIN = Read-Host "Enter your domain name (leave empty to use public IP or localhost)"
@@ -102,16 +112,24 @@ if ($FORCE_HTTPS_RESPONSE -match "^[Nn]$") {
 if ([string]::IsNullOrEmpty($HTTP_PORT)) { $HTTP_PORT = "80" }
 if ([string]::IsNullOrEmpty($HTTPS_PORT)) { $HTTPS_PORT = "443" }
 
-# Build Docker image
-Write-Host "Building Docker image..." -ForegroundColor Yellow
-docker build -t webgl-nginx .
+if ($PREBUILT) {
+    # Pull the prebuilt image
+    Write-Host "Pulling Docker image from GitHub Container Registry..." -ForegroundColor Yellow
+    docker pull ghcr.io/idkmanplsimconfused/webgl-nginx:latest
+    $IMAGE_NAME = "ghcr.io/idkmanplsimconfused/webgl-nginx:latest"
+} else {
+    # Build Docker image
+    Write-Host "Building Docker image..." -ForegroundColor Yellow
+    docker build -t webgl-nginx .
+    $IMAGE_NAME = "webgl-nginx"
+}
 
 # Run Docker container
 Write-Host "Starting container..." -ForegroundColor Yellow
 if ([string]::IsNullOrEmpty($DOMAIN)) {
-    docker run -d --name webgl-nginx -p ${HTTP_PORT}:80 -p ${HTTPS_PORT}:443 -e FORCE_HTTPS=$FORCE_HTTPS webgl-nginx
+    docker run -d --name webgl-nginx -p ${HTTP_PORT}:80 -p ${HTTPS_PORT}:443 -e FORCE_HTTPS=$FORCE_HTTPS $IMAGE_NAME
 } else {
-    docker run -d --name webgl-nginx -p ${HTTP_PORT}:80 -p ${HTTPS_PORT}:443 -e DOMAIN="$DOMAIN" -e FORCE_HTTPS=$FORCE_HTTPS webgl-nginx
+    docker run -d --name webgl-nginx -p ${HTTP_PORT}:80 -p ${HTTPS_PORT}:443 -e DOMAIN="$DOMAIN" -e FORCE_HTTPS=$FORCE_HTTPS $IMAGE_NAME
 }
 
 # Get container IP
