@@ -168,6 +168,16 @@ This server uses:
 - Brotli compression provides 20-26% better compression than gzip for text-based files like JavaScript
 - Both Brotli and gzip compression are enabled by default for optimal delivery
 
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Contact
+
+For questions, issues, or suggestions, please contact:
+- Email: atqamz@gmail.com
+- GitHub: [atqamz](https://github.com/atqamz)
+
 ## Notes
 
 - The server uses self-signed SSL certificates, so browsers may show a security warning.
