@@ -97,7 +97,7 @@ foreach ($app in $HTML_FILES) {
     if ($app -eq "ROOT") {
         Write-Host "- Root application: $BASE_URL/" -ForegroundColor Yellow
     } else {
-        Write-Host "- $app: $BASE_URL/$app/" -ForegroundColor Yellow
+        Write-Host "- $app`: $BASE_URL/$app/" -ForegroundColor Yellow
     }
 }
 Write-Host "==========================" -ForegroundColor Green 
