@@ -1,6 +1,6 @@
-# Unity WebGL Nginx Docker Server
+# WebGL Nginx Docker Server
 
-This package provides an easy way to host your Unity WebGL application with Nginx and Docker, including proper MIME types and compression settings for optimal delivery.
+This package provides an easy way to host any WebGL application (including Unity, PlayCanvas, Three.js, Babylon.js, and more) with Nginx and Docker, including proper MIME types and compression settings for optimal delivery.
 
 ## Features
 
@@ -8,7 +8,7 @@ This package provides an easy way to host your Unity WebGL application with Ngin
 - Optional HTTP to HTTPS redirection (can be disabled)
 - Support for domain names, public IP, or localhost access
 - Configurable HTTP/HTTPS ports
-- Optimized Nginx configuration for Unity WebGL applications
+- Optimized Nginx configuration for WebGL applications
 - Support for compressed WebGL files (.gz and .br)
 - Brotli compression enabled for better performance
 - Works with both Linux/macOS and Windows
@@ -16,42 +16,91 @@ This package provides an easy way to host your Unity WebGL application with Ngin
 ## Prerequisites
 
 - Docker installed on your system
-- Your Unity WebGL build files in this directory
+- Git installed on your system (for installation via install scripts)
+- Your WebGL build files to host
 
-## Directory Structure
-
-Place your Unity WebGL build files in this directory. For example:
-```
-./index.html        # Main application
-./x/index.html      # Secondary application or component
-```
-
-## Quick Start
+## Quick Installation
 
 ### Linux/macOS
 
-1. Make the setup script executable:
+Download and run the installation script with a single command:
+```bash
+curl -sSL https://raw.githubusercontent.com/idkmanplsimconfused/webgl-nginx/main/install.sh | bash
+```
+
+Or download the script first and then run it:
+```bash
+curl -O https://raw.githubusercontent.com/idkmanplsimconfused/webgl-nginx/main/install.sh
+chmod +x install.sh
+./install.sh
+```
+
+### Windows
+
+Download and run the installation script with PowerShell:
+```powershell
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/idkmanplsimconfused/webgl-nginx/main/install.ps1" -OutFile "install.ps1"
+.\install.ps1
+```
+
+## Manual Setup
+
+If you prefer to clone the repository manually:
+
+### Linux/macOS
+
+1. Clone the repository:
+   ```
+   git clone https://github.com/idkmanplsimconfused/webgl-nginx.git
+   cd webgl-nginx
+   ```
+
+2. Make the setup script executable:
    ```
    chmod +x setup.sh
    ```
 
-2. Run the setup script:
+3. Run the setup script:
    ```
    ./setup.sh
    ```
 
-3. Follow the prompts to enter optional domain name, ports, and HTTPS redirection preference.
+4. Follow the prompts to enter optional domain name, ports, and HTTPS redirection preference.
 
 ### Windows
 
-1. Right-click on `setup.ps1` and select "Run with PowerShell" 
+1. Clone the repository:
+   ```
+   git clone https://github.com/idkmanplsimconfused/webgl-nginx.git
+   cd webgl-nginx
+   ```
+
+2. Right-click on `setup.ps1` and select "Run with PowerShell" 
    OR
    Open PowerShell and run:
    ```
    .\setup.ps1
    ```
 
-2. Follow the prompts to enter optional domain name, ports, and HTTPS redirection preference.
+3. Follow the prompts to enter optional domain name, ports, and HTTPS redirection preference.
+
+## Directory Structure
+
+Place your WebGL build files in this directory. For example:
+```
+./index.html        # Main application
+./x/index.html      # Secondary application or component
+```
+
+## Compatibility
+
+This server is optimized for all WebGL frameworks and engines, including:
+- Unity WebGL builds
+- PlayCanvas
+- Three.js
+- Babylon.js
+- p5.js
+- And any other WebGL-based application
 
 ## Configuration Options
 
@@ -94,9 +143,9 @@ https://localhost:8443
 
 ## Managing the Docker Container
 
-- Stop the server: `docker stop unity-webgl-nginx`
-- Start the server again: `docker start unity-webgl-nginx`
-- Remove the container: `docker rm unity-webgl-nginx`
+- Stop the server: `docker stop webgl-nginx`
+- Start the server again: `docker start webgl-nginx`
+- Remove the container: `docker rm webgl-nginx`
 
 ## Troubleshooting
 

@@ -1,4 +1,4 @@
-Write-Host "Unity WebGL Nginx Docker Setup" -ForegroundColor Cyan
+Write-Host "WebGL Nginx Docker Server" -ForegroundColor Cyan
 Write-Host "=============================" -ForegroundColor Cyan
 
 # Check if Docker is installed
@@ -104,21 +104,21 @@ if ([string]::IsNullOrEmpty($HTTPS_PORT)) { $HTTPS_PORT = "443" }
 
 # Build Docker image
 Write-Host "Building Docker image..." -ForegroundColor Yellow
-docker build -t unity-webgl-nginx .
+docker build -t webgl-nginx .
 
 # Run Docker container
 Write-Host "Starting container..." -ForegroundColor Yellow
 if ([string]::IsNullOrEmpty($DOMAIN)) {
-    docker run -d --name unity-webgl-nginx -p ${HTTP_PORT}:80 -p ${HTTPS_PORT}:443 -e FORCE_HTTPS=$FORCE_HTTPS unity-webgl-nginx
+    docker run -d --name webgl-nginx -p ${HTTP_PORT}:80 -p ${HTTPS_PORT}:443 -e FORCE_HTTPS=$FORCE_HTTPS webgl-nginx
 } else {
-    docker run -d --name unity-webgl-nginx -p ${HTTP_PORT}:80 -p ${HTTPS_PORT}:443 -e DOMAIN="$DOMAIN" -e FORCE_HTTPS=$FORCE_HTTPS unity-webgl-nginx
+    docker run -d --name webgl-nginx -p ${HTTP_PORT}:80 -p ${HTTPS_PORT}:443 -e DOMAIN="$DOMAIN" -e FORCE_HTTPS=$FORCE_HTTPS webgl-nginx
 }
 
 # Get container IP
-$CONTAINER_IP = docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' unity-webgl-nginx
+$CONTAINER_IP = docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' webgl-nginx
 
 Write-Host "=============================" -ForegroundColor Cyan
-Write-Host "Unity WebGL server is running!" -ForegroundColor Green
+Write-Host "WebGL server is running!" -ForegroundColor Green
 if ([string]::IsNullOrEmpty($DOMAIN)) {
     Write-Host "Access your application at:" -ForegroundColor Green
     if ($FORCE_HTTPS -eq 1) {
@@ -158,6 +158,6 @@ if ([string]::IsNullOrEmpty($DOMAIN)) {
 }
 Write-Host "Container IP: $CONTAINER_IP" -ForegroundColor Yellow
 Write-Host "=============================" -ForegroundColor Cyan
-Write-Host "To stop the server: docker stop unity-webgl-nginx" -ForegroundColor Gray
-Write-Host "To start the server again: docker start unity-webgl-nginx" -ForegroundColor Gray
-Write-Host "To remove the container: docker rm unity-webgl-nginx" -ForegroundColor Gray 
+Write-Host "To stop the server: docker stop webgl-nginx" -ForegroundColor Gray
+Write-Host "To start the server again: docker start webgl-nginx" -ForegroundColor Gray
+Write-Host "To remove the container: docker rm webgl-nginx" -ForegroundColor Gray 

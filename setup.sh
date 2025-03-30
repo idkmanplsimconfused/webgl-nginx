@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Unity WebGL Nginx Docker Setup"
+echo "WebGL Nginx Docker Server"
 echo "============================="
 
 # Check if Docker is installed
@@ -102,21 +102,21 @@ HTTPS_PORT=${HTTPS_PORT:-443}
 
 # Build Docker image
 echo "Building Docker image..."
-docker build -t unity-webgl-nginx .
+docker build -t webgl-nginx .
 
 # Run Docker container
 echo "Starting container..."
 if [ -z "$DOMAIN" ]; then
-    docker run -d --name unity-webgl-nginx -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -e FORCE_HTTPS=$FORCE_HTTPS unity-webgl-nginx
+    docker run -d --name webgl-nginx -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -e FORCE_HTTPS=$FORCE_HTTPS webgl-nginx
 else
-    docker run -d --name unity-webgl-nginx -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -e DOMAIN="$DOMAIN" -e FORCE_HTTPS=$FORCE_HTTPS unity-webgl-nginx
+    docker run -d --name webgl-nginx -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -e DOMAIN="$DOMAIN" -e FORCE_HTTPS=$FORCE_HTTPS webgl-nginx
 fi
 
 # Get container IP
-CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' unity-webgl-nginx)
+CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' webgl-nginx)
 
 echo "============================="
-echo "Unity WebGL server is running!"
+echo "WebGL server is running!"
 if [ -z "$DOMAIN" ]; then
     echo "Access your application at:"
     if [ "$FORCE_HTTPS" = "1" ]; then
@@ -146,6 +146,6 @@ else
 fi
 echo "Container IP: $CONTAINER_IP"
 echo "============================="
-echo "To stop the server: docker stop unity-webgl-nginx"
-echo "To start the server again: docker start unity-webgl-nginx"
-echo "To remove the container: docker rm unity-webgl-nginx" 
+echo "To stop the server: docker stop webgl-nginx"
+echo "To start the server again: docker start webgl-nginx"
+echo "To remove the container: docker rm webgl-nginx" 
