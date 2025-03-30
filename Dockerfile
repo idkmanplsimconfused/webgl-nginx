@@ -1,30 +1,27 @@
-FROM nginx:alpine
+FROM fholzer/nginx-brotli:latest
 
-# Install required packages
-RUN apk add --no-cache bash openssl certbot certbot-nginx
+# Install dependencies
+RUN apk add --no-cache openssl dos2unix
 
-# Copy Nginx config
-COPY nginx.conf /etc/nginx/nginx.conf
-COPY default.conf /etc/nginx/conf.d/default.conf
+# Set working directory
+WORKDIR /app
 
-# Create directory for applications
-RUN mkdir -p /usr/share/nginx/html
-
-# Copy all web content to nginx html directory
+# Copy web application files
 COPY . /usr/share/nginx/html/
 
-# Remove configuration files from the HTML directory
-RUN cd /usr/share/nginx/html && \
-    rm -f Dockerfile nginx.conf default.conf entrypoint.sh ssl-setup.sh setup.sh setup.ps1 .dockerignore
+# Copy Nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy SSL setup scripts
-COPY ssl-setup.sh /ssl-setup.sh
-RUN chmod +x /ssl-setup.sh
+# Create self-signed SSL directory
+RUN mkdir -p /etc/nginx/ssl
 
-# Copy entrypoint script
-COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Set up entrypoint script with correct line endings
+COPY docker-entrypoint.sh /
+RUN dos2unix /docker-entrypoint.sh && chmod +x /docker-entrypoint.sh
 
+# Expose ports
 EXPOSE 80 443
 
-ENTRYPOINT ["/entrypoint.sh"] 
+# Set entrypoint
+ENTRYPOINT ["/docker-entrypoint.sh"]
+CMD ["nginx", "-g", "daemon off;"] 

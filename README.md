@@ -1,159 +1,94 @@
-# WebGL Docker Setup with Nginx
+# Unity WebGL Nginx Docker Server
 
-This project provides a Docker setup for hosting WebGL applications and other web content using Nginx with HTTPS support. The configuration is designed to serve any HTML content in the directory where you run the setup scripts.
+This package provides an easy way to host your Unity WebGL application with Nginx and Docker, including proper MIME types and compression settings for optimal delivery.
 
 ## Features
 
-- Modular design that automatically detects and serves all web applications in the current directory
-- Nginx server optimized for WebGL content, particularly Unity WebGL applications
-- HTTPS support with either:
-  - Self-signed certificates (when using IP address)
-  - Let's Encrypt certificates (when using a domain name)
-- Proper MIME type handling for compressed WebGL files (.gz and .br)
-- Automatic handling of gzip and Brotli compression
-- Support for both domain names and public IP addresses
+- HTTPS support with automatic self-signed certificate generation
+- Support for domain names or public IP access
+- Optimized Nginx configuration for Unity WebGL applications
+- Support for compressed WebGL files (.gz and .br)
+- Brotli compression enabled for better performance
+- Works with both Linux/macOS and Windows
 
 ## Prerequisites
 
 - Docker installed on your system
-- Open ports 80 and 443 on your firewall/network
-- (Optional) A domain name pointing to your server's IP address
-
-## Quick Installation
-
-### For Windows (PowerShell):
-
-Run this command in PowerShell from the directory containing your web applications:
-
-```powershell
-irm https://raw.githubusercontent.com/idkmanplsimconfused/webgl-nginx/master/install-direct.ps1 | iex
-```
-
-### For Linux/macOS:
-
-Run this command in your terminal from the directory containing your web applications:
-
-```bash
-curl -fsSL https://raw.githubusercontent.com/idkmanplsimconfused/webgl-nginx/master/install-direct.sh | bash
-```
-
-**Note:** The installation scripts will clone the repository files directly into your current directory. Make sure you run these commands in a directory that contains your web applications or where you want the server to be installed.
-
-## Manual Installation
-
-If you prefer to install manually:
-
-```bash
-# Navigate to the directory containing your web applications
-cd /path/to/your/webapps
-
-# Initialize git repository and pull webgl-nginx files
-git init
-git remote add origin https://github.com/idkmanplsimconfused/webgl-nginx.git
-git fetch origin master
-git checkout -b master --track origin/master
-
-# Make scripts executable (Linux/macOS only)
-chmod +x setup.sh ssl-setup.sh entrypoint.sh
-```
+- Your Unity WebGL build files in this directory
 
 ## Directory Structure
 
-The setup expects the following structure:
+Place your Unity WebGL build files in this directory. For example:
 ```
-your-project-directory/  (where you run the installation)
-├── setup.sh                # Linux/macOS setup script
-├── setup.ps1               # Windows setup script
-├── Dockerfile              # Docker configuration
-├── nginx.conf              # Nginx main configuration
-├── default.conf            # Nginx server configuration
-├── entrypoint.sh           # Docker container entrypoint
-├── ssl-setup.sh            # Let's Encrypt SSL setup script
-├── app1/                   # Your first web application
-│   └── index.html          # Entry point for app1
-├── app2/                   # Your second web application
-│   └── index.html          # Entry point for app2
-└── index.html              # (Optional) Root web application
+./index.html        # Main application
+./x/index.html      # Secondary application or component
 ```
 
-Any directory containing an index.html file (up to 2 levels deep) will be detected and served.
+## Quick Start
 
-## Setup Instructions
+### Linux/macOS
 
-### For Linux/macOS:
+1. Make the setup script executable:
+   ```
+   chmod +x setup.sh
+   ```
 
-1. Run the setup script:
-   ```bash
+2. Run the setup script:
+   ```
    ./setup.sh
    ```
 
-2. Follow the prompts to enter your domain name (optional) and email address (for Let's Encrypt).
+3. Follow the prompts to enter an optional domain name.
 
-### For Windows:
+### Windows
 
-1. Run the PowerShell script:
-   ```powershell
+1. Right-click on `setup.ps1` and select "Run with PowerShell" 
+   OR
+   Open PowerShell and run:
+   ```
    .\setup.ps1
    ```
 
-2. Follow the prompts to enter your domain name (optional) and email address (for Let's Encrypt).
+2. Follow the prompts to enter an optional domain name.
 
-## Manual Setup
+## Accessing Your Application
 
-If you prefer to set up manually after installation:
+- If you provided a domain name, access your app at `https://your-domain.com`
+- If you didn't provide a domain, access your app at `https://your-public-ip`
 
-1. Build the Docker image:
-   ```bash
-   docker build -t webgl-nginx .
-   ```
+For sub-applications:
+- Main application: `https://your-domain.com` or `https://your-public-ip`
+- Sub-application: `https://your-domain.com/x` or `https://your-public-ip/x`
 
-2. Run with a domain name:
-   ```bash
-   docker run -d -p 80:80 -p 443:443 -e DOMAIN="yourdomain.com" --name webgl-server webgl-nginx
-   docker exec -it webgl-server /ssl-setup.sh "yourdomain.com" "your@email.com"
-   ```
+## Managing the Docker Container
 
-   Or run with public IP (self-signed certificate):
-   ```bash
-   docker run -d -p 80:80 -p 443:443 --name webgl-server webgl-nginx
-   ```
+- Stop the server: `docker stop unity-webgl-nginx`
+- Start the server again: `docker start unity-webgl-nginx`
+- Remove the container: `docker rm unity-webgl-nginx`
 
-## Accessing Your Applications
+## Troubleshooting
 
-After setup, your web applications will be available at:
+### Docker Container Won't Start
 
-- If using a domain:
-  - Root application: `https://yourdomain.com/`
-  - Other apps: `https://yourdomain.com/app-directory/`
+If you see an error like `exec /docker-entrypoint.sh: no such file or directory` in the Docker logs, this is typically caused by incorrect line endings in the entrypoint script. The setup scripts (`setup.sh` and `setup.ps1`) have been designed to handle this automatically by:
 
-- If using IP:
-  - Root application: `https://your.public.ip/`
-  - Other apps: `https://your.public.ip/app-directory/`
+1. Creating the entrypoint script with the correct line endings
+2. Installing `dos2unix` in the Docker image to convert line endings
 
-**Note:** When using a self-signed certificate with IP, your browser will show a security warning. You can bypass this by clicking "Advanced" and then "Proceed" in most browsers.
+If you're still having issues:
+- On Windows, ensure you're using the provided `setup.ps1` script
+- On Linux/macOS, ensure you're using the provided `setup.sh` script
+- Manually check line endings with `file docker-entrypoint.sh`
 
-## Management Commands
+## Image & Compression Information
 
-- Stop the container:
-  ```bash
-  docker stop webgl-server
-  ```
+This server uses:
+- `fholzer/nginx-brotli` Docker image that includes Nginx with Brotli compression support
+- Brotli compression provides 20-26% better compression than gzip for text-based files like JavaScript
+- Both Brotli and gzip compression are enabled by default for optimal delivery
 
-- Start the container:
-  ```bash
-  docker start webgl-server
-  ```
+## Notes
 
-- Remove the container:
-  ```bash
-  docker rm -f webgl-server
-  ```
-
-## Customization
-
-If you want to customize the setup, you can modify:
-
-- `nginx.conf` - Main Nginx configuration
-- `default.conf` - Server block configuration
-- `entrypoint.sh` - Container startup script
-- `ssl-setup.sh` - Let's Encrypt SSL setup script
+- The server uses self-signed SSL certificates, so browsers may show a security warning.
+- To use with a real domain, set up proper DNS records pointing to your server's IP address.
+- For production use, consider using a proper SSL certificate from Let's Encrypt or similar. 

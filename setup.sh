@@ -1,89 +1,100 @@
 #!/bin/bash
 set -e
 
-# Unity WebGL Nginx Docker Setup Script
-# This script sets up a Docker container with Nginx to serve all HTML content in the current directory
+echo "Unity WebGL Nginx Docker Setup"
+echo "============================="
 
 # Check if Docker is installed
 if ! command -v docker &> /dev/null; then
-    echo "Docker is not installed. Please install Docker first."
+    echo "Error: Docker is not installed. Please install Docker first."
     exit 1
 fi
 
-# Detect available HTML applications
-echo "Detecting HTML applications in current directory..."
-HTML_FILES=$(find . -maxdepth 2 -name "index.html" | sed 's/.\///' | sed 's/\/index.html//')
-if [ -z "$HTML_FILES" ]; then
-    echo "No HTML applications found in the current directory."
-    echo "Make sure you have at least one directory with an index.html file."
-    exit 1
+# Ensure entrypoint script has proper Unix line endings
+echo "Ensuring entrypoint script has proper line endings..."
+cat > docker-entrypoint.sh << 'EOF'
+#!/bin/sh
+set -e
+
+# Get the server's public IP if domain is not provided
+if [ -z "${DOMAIN}" ]; then
+    echo "No domain provided, using public IP address"
+    PUBLIC_IP=$(wget -qO- https://ipinfo.io/ip || echo "localhost")
+    DOMAIN=$PUBLIC_IP
+    echo "Using IP: $DOMAIN"
+else
+    echo "Using domain: $DOMAIN"
 fi
 
-echo "Found the following applications:"
-for app in $HTML_FILES; do
-    if [ "$app" = "index.html" ]; then
-        echo "- Root application (./)"
-    else
-        echo "- $app"
-    fi
-done
+# Generate SSL certificate if not already present
+if [ ! -f "/etc/nginx/ssl/nginx.crt" ] || [ ! -f "/etc/nginx/ssl/nginx.key" ]; then
+    echo "Generating self-signed SSL certificate for $DOMAIN"
+    
+    # Create a config file for OpenSSL (for Alpine compatibility)
+    cat > /tmp/openssl.cnf << EOC
+[req]
+distinguished_name = req_distinguished_name
+x509_extensions = v3_req
+prompt = no
 
-# Prompt for domain (optional)
-read -p "Enter your domain name (optional, leave blank to use public IP): " DOMAIN
-read -p "Enter email for SSL certificate notifications (only needed if domain is provided): " EMAIL
+[req_distinguished_name]
+CN = $DOMAIN
 
-# Build the Docker image
+[v3_req]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = $DOMAIN
+IP.1 = $PUBLIC_IP
+EOC
+
+    # Generate the certificate using the config file
+    openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+        -keyout /etc/nginx/ssl/nginx.key \
+        -out /etc/nginx/ssl/nginx.crt \
+        -config /tmp/openssl.cnf
+        
+    # Clean up
+    rm -f /tmp/openssl.cnf
+fi
+
+# Replace server_name in the Nginx configuration
+sed -i "s/server_name _;/server_name $DOMAIN;/g" /etc/nginx/conf.d/default.conf
+
+# Execute the original command
+exec "$@"
+EOF
+chmod +x docker-entrypoint.sh
+
+# Ask for domain (optional)
+read -p "Enter your domain name (leave empty to use public IP): " DOMAIN
+
+# Build Docker image
 echo "Building Docker image..."
 docker build -t unity-webgl-nginx .
 
-# Run the container
-if [ -n "$DOMAIN" ] && [ -n "$EMAIL" ]; then
-    # Run with domain and prepare for Let's Encrypt SSL
-    echo "Starting Docker container with domain: $DOMAIN"
-    
-    # Run container with domain environment variable
-    CONTAINER_ID=$(docker run -d -p 80:80 -p 443:443 \
-        -e DOMAIN="$DOMAIN" \
-        --name unity-webgl-server \
-        unity-webgl-nginx)
-    
-    echo "Container started. Waiting for initialization..."
-    sleep 5
-    
-    # Set up Let's Encrypt SSL certificates
-    echo "Setting up Let's Encrypt SSL..."
-    docker exec -it unity-webgl-server /ssl-setup.sh "$DOMAIN" "$EMAIL"
+# Run Docker container
+echo "Starting container..."
+if [ -z "$DOMAIN" ]; then
+    docker run -d --name unity-webgl-nginx -p 80:80 -p 443:443 unity-webgl-nginx
 else
-    # Run with self-signed certificate using public IP
-    echo "Starting Docker container with self-signed SSL certificate..."
-    docker run -d -p 80:80 -p 443:443 \
-        --name unity-webgl-server \
-        unity-webgl-nginx
-    
-    # Get the container's public IP
-    PUBLIC_IP=$(wget -qO- https://ifconfig.me || echo "localhost")
-    echo "Container started with self-signed certificate."
+    docker run -d --name unity-webgl-nginx -p 80:80 -p 443:443 -e DOMAIN="$DOMAIN" unity-webgl-nginx
 fi
 
-# Display access information
-echo ""
-echo "===== SETUP COMPLETE ====="
-BASE_URL=""
-if [ -n "$DOMAIN" ]; then
-    BASE_URL="https://$DOMAIN"
-else
-    PUBLIC_IP=$(wget -qO- https://ifconfig.me || echo "localhost")
-    BASE_URL="https://$PUBLIC_IP"
-    echo "NOTE: Since you're using a self-signed certificate, your browser may show a security warning."
-    echo "You can bypass this by clicking 'Advanced' and then 'Proceed' in most browsers."
-fi
+# Get container IP
+CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' unity-webgl-nginx)
 
-echo "Your applications are now available at:"
-for app in $HTML_FILES; do
-    if [ "$app" = "index.html" ]; then
-        echo "- Root application: $BASE_URL/"
-    else
-        echo "- $app: $BASE_URL/$app/"
-    fi
-done
-echo "==========================="
+echo "============================="
+echo "Unity WebGL server is running!"
+if [ -z "$DOMAIN" ]; then
+    PUBLIC_IP=$(wget -qO- https://ipinfo.io/ip || echo "localhost")
+    echo "Access your application at: https://$PUBLIC_IP"
+else
+    echo "Access your application at: https://$DOMAIN"
+    echo "Make sure your DNS points to your server's IP address."
+fi
+echo "Container IP: $CONTAINER_IP"
+echo "============================="
+echo "To stop the server: docker stop unity-webgl-nginx"
+echo "To start the server again: docker start unity-webgl-nginx"
+echo "To remove the container: docker rm unity-webgl-nginx" 
