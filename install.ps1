@@ -12,41 +12,41 @@ if (-not (Get-Command "git" -ErrorAction SilentlyContinue)) {
     exit 1
 }
 
-# Set the repository URL, branch and directory name
+# Set the repository URL, branch
 $repoUrl = "https://github.com/idkmanplsimconfused/webgl-nginx.git"
 $branch = "master"
-$repoDir = "webgl-nginx"
 
-# Check if we're already in the repository directory
-if (Test-Path -Path "$repoDir\.git") {
-    Write-Host "Repository already cloned. Updating..." -ForegroundColor Yellow
-    Push-Location $repoDir
-    git fetch
-    git checkout $branch
-    git pull origin $branch
-    Pop-Location
+# Check if current directory has git repo
+if (Test-Path -Path ".git") {
+    Write-Host "Git repository already exists in current directory. Updating..." -ForegroundColor Yellow
+    git remote add webgl-nginx $repoUrl 2>$null
+    git fetch webgl-nginx
+    git merge webgl-nginx/$branch --allow-unrelated-histories -m "Merge webgl-nginx repository"
 } else {
-    # Clone the repository with specific branch
-    Write-Host "Cloning the repository (branch: $branch)..." -ForegroundColor Green
-    git clone -b $branch $repoUrl
+    # Clone the repository files directly into current directory
+    Write-Host "Cloning the repository (branch: $branch) into current directory..." -ForegroundColor Green
     
-    if (-not (Test-Path -Path $repoDir)) {
+    # Initialize git and pull files
+    git init
+    git remote add origin $repoUrl
+    git fetch origin $branch
+    git checkout -b $branch --track origin/$branch
+    
+    if (-not $?) {
         Write-Host "Error: Failed to clone the repository." -ForegroundColor Red
         exit 1
     }
 }
 
-# Change to the repository directory
-Set-Location $repoDir
+# Make scripts executable (PowerShell doesn't need this, but keeping for consistency)
+Write-Host "Preparing scripts..." -ForegroundColor Cyan
 
 # Print completion message
 Write-Host ""
 Write-Host "===== Installation Complete =====" -ForegroundColor Green
-Write-Host "The webgl-nginx repository has been cloned to: $(Get-Location)" -ForegroundColor White
+Write-Host "The webgl-nginx repository has been cloned to the current directory: $(Get-Location)" -ForegroundColor White
 Write-Host ""
 
 # Automatically run setup.ps1
 Write-Host "Running setup script now..." -ForegroundColor Green
 & .\setup.ps1
-
-# We don't return to the original directory since setup.ps1 is running

@@ -17,34 +17,38 @@ fi
 REPO_URL="https://github.com/idkmanplsimconfused/webgl-nginx.git"
 BRANCH="master"
 
-# Check if we're already in the repository directory
-if [ -d "webgl-nginx/.git" ]; then
-    echo "Repository already cloned. Updating..."
-    cd webgl-nginx
-    git fetch
-    git checkout $BRANCH
-    git pull origin $BRANCH
+# Check if current directory has git repo
+if [ -d ".git" ]; then
+    echo "Git repository already exists in current directory. Updating..."
+    git remote add webgl-nginx $REPO_URL 2>/dev/null || true
+    git fetch webgl-nginx
+    git merge webgl-nginx/$BRANCH --allow-unrelated-histories -m "Merge webgl-nginx repository"
 else
-    # Clone the repository with specific branch
-    echo "Cloning the repository (branch: $BRANCH)..."
-    git clone -b $BRANCH $REPO_URL
+    # Clone the repository files directly into current directory
+    echo "Cloning the repository (branch: $BRANCH) into current directory..."
     
-    if [ ! -d "webgl-nginx" ]; then
+    # Initialize git and pull files
+    git init
+    git remote add origin $REPO_URL
+    git fetch origin $BRANCH
+    git checkout -b $BRANCH --track origin/$BRANCH
+    
+    if [ $? -ne 0 ]; then
         echo "Error: Failed to clone the repository."
         exit 1
     fi
-    
-    cd webgl-nginx
 fi
 
-# Make scripts executable using make-executable.sh
+# Make scripts executable
 echo "Making scripts executable..."
+chmod +x setup.sh
+chmod +x ssl-setup.sh
+chmod +x entrypoint.sh
 chmod +x make-executable.sh
-./make-executable.sh
 
 echo ""
 echo "===== Installation Complete ====="
-echo "The webgl-nginx repository has been cloned to: $(pwd)"
+echo "The webgl-nginx repository has been cloned to the current directory: $(pwd)"
 
 # Automatically run setup.sh
 echo "Running setup script now..."

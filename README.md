@@ -23,7 +23,7 @@ This project provides a Docker setup for hosting WebGL applications and other we
 
 ### For Windows (PowerShell):
 
-Run this command in PowerShell:
+Run this command in PowerShell from the directory containing your web applications:
 
 ```powershell
 irm https://raw.githubusercontent.com/idkmanplsimconfused/webgl-nginx/master/install-direct.ps1 | iex
@@ -31,27 +31,37 @@ irm https://raw.githubusercontent.com/idkmanplsimconfused/webgl-nginx/master/ins
 
 ### For Linux/macOS:
 
-Run this command in your terminal:
+Run this command in your terminal from the directory containing your web applications:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/idkmanplsimconfused/webgl-nginx/master/install-direct.sh | bash
 ```
+
+**Note:** The installation scripts will clone the repository files directly into your current directory. Make sure you run these commands in a directory that contains your web applications or where you want the server to be installed.
 
 ## Manual Installation
 
 If you prefer to install manually:
 
 ```bash
-git clone https://github.com/idkmanplsimconfused/webgl-nginx.git -b master
-cd webgl-nginx
-chmod +x setup.sh ssl-setup.sh entrypoint.sh  # Linux/macOS only
+# Navigate to the directory containing your web applications
+cd /path/to/your/webapps
+
+# Initialize git repository and pull webgl-nginx files
+git init
+git remote add origin https://github.com/idkmanplsimconfused/webgl-nginx.git
+git fetch origin master
+git checkout -b master --track origin/master
+
+# Make scripts executable (Linux/macOS only)
+chmod +x setup.sh ssl-setup.sh entrypoint.sh
 ```
 
 ## Directory Structure
 
 The setup expects the following structure:
 ```
-your-project-directory/
+your-project-directory/  (where you run the installation)
 ├── setup.sh                # Linux/macOS setup script
 ├── setup.ps1               # Windows setup script
 ├── Dockerfile              # Docker configuration
