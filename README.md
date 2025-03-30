@@ -5,6 +5,7 @@ This package provides an easy way to host your Unity WebGL application with Ngin
 ## Features
 
 - HTTPS support with automatic self-signed certificate generation
+- Optional HTTP to HTTPS redirection (can be disabled)
 - Support for domain names, public IP, or localhost access
 - Configurable HTTP/HTTPS ports
 - Optimized Nginx configuration for Unity WebGL applications
@@ -39,7 +40,7 @@ Place your Unity WebGL build files in this directory. For example:
    ./setup.sh
    ```
 
-3. Follow the prompts to enter optional domain name and ports.
+3. Follow the prompts to enter optional domain name, ports, and HTTPS redirection preference.
 
 ### Windows
 
@@ -50,13 +51,31 @@ Place your Unity WebGL build files in this directory. For example:
    .\setup.ps1
    ```
 
-2. Follow the prompts to enter optional domain name and ports.
+2. Follow the prompts to enter optional domain name, ports, and HTTPS redirection preference.
+
+## Configuration Options
+
+During setup, you'll be asked to configure:
+
+1. **Domain Name** (optional) - Your custom domain name or leave empty to use public IP/localhost
+2. **HTTP Port** (default: 80) - The port for HTTP traffic
+3. **HTTPS Port** (default: 443) - The port for HTTPS traffic
+4. **Force HTTPS Redirection** (default: Yes) - Whether to automatically redirect HTTP traffic to HTTPS
 
 ## Accessing Your Application
 
+If HTTPS redirection is enabled (default):
 - **Local Access**: `https://localhost[:port]`
 - **Public Access**: `https://your-public-ip[:port]`
 - **Domain Access**: `https://your-domain[:port]` (if domain was provided)
+
+If HTTPS redirection is disabled:
+- **HTTP Local Access**: `http://localhost[:http-port]`
+- **HTTPS Local Access**: `https://localhost[:https-port]`
+- **HTTP Public Access**: `http://your-public-ip[:http-port]`
+- **HTTPS Public Access**: `https://your-public-ip[:https-port]`
+- **HTTP Domain Access**: `http://your-domain[:http-port]` (if domain was provided)
+- **HTTPS Domain Access**: `https://your-domain[:https-port]` (if domain was provided)
 
 For sub-applications:
 - Main application: `https://localhost[:port]` or `https://your-domain[:port]`
