@@ -1,0 +1,77 @@
+# Enable mod_rewrite for URL rewriting
+RewriteEngine On
+
+# Redirect root domain (/) to the "airbag" subfolder
+# RewriteRule ^$ /airbag/ [L,R=301]
+RewriteCond %{HTTPS} !=on
+RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L]
+
+# Ensure mod_mime is enabled for MIME type configurations
+<IfModule mod_mime.c>
+    # Remove existing types for gzip and Brotli files
+    RemoveType .gz
+    RemoveType .br
+    RemoveLanguage .br
+
+    # Gzip-compressed file types
+    AddEncoding gzip .gz
+    AddType application/javascript .js.gz
+    AddType application/wasm .wasm.gz
+    AddType application/octet-stream .symbols.json.gz
+    AddType application/gzip .data.gz # Safari compatibility fix
+
+    # Brotli-compressed file types
+    AddEncoding br .br
+    AddType application/javascript .js.br
+    AddType application/wasm .wasm.br
+    AddType application/octet-stream .symbols.json.br
+    AddType application/octet-stream .data.br
+
+    # Uncompressed WebAssembly MIME type
+    AddType application/wasm .wasm
+</IfModule>
+
+# Enable Brotli compression for WebAssembly
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS application/wasm application/javascript
+</IfModule>
+
+# Enable Gzip compression for WebAssembly and JavaScript
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE application/wasm application/javascript
+</IfModule>
+
+# Set appropriate headers for gzip-compressed files
+<FilesMatch "\.gz$">
+    Header set Content-Encoding gzip
+</FilesMatch>
+
+# Set appropriate headers for Brotli-compressed files
+<FilesMatch "\.br$">
+    Header set Content-Encoding br
+</FilesMatch>
+
+# Set appropriate headers for gzip-compressed JavaScript files
+<FilesMatch "\.js\.gz$">
+    Header set Content-Encoding gzip
+    Header set Content-Type application/javascript
+</FilesMatch>
+
+# Set appropriate headers for Brotli-compressed JavaScript files
+<FilesMatch "\.js\.br$">
+    Header set Content-Encoding br
+    Header set Content-Type application/javascript
+</FilesMatch>
+
+# Set appropriate headers for gzip-compressed WebAssembly files
+<FilesMatch "\.wasm\.gz$">
+    Header set Content-Encoding gzip
+    Header set Content-Type application/wasm
+</FilesMatch>
+
+# Set appropriate headers for Brotli-compressed WebAssembly files
+<FilesMatch "\.wasm\.br$">
+    Header set Content-Encoding br
+    Header set Content-Type application/wasm
+</FilesMatch>
+

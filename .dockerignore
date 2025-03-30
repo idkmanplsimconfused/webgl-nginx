@@ -1,0 +1,18 @@
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Setup scripts
+setup.sh
+setup.ps1
+README.md
+
+# Other
+.DS_Store
+*.log
+*.md
+!README.md 
