@@ -67,7 +67,15 @@ EOF
 chmod +x docker-entrypoint.sh
 
 # Ask for domain (optional)
-read -p "Enter your domain name (leave empty to use public IP): " DOMAIN
+read -p "Enter your domain name (leave empty to use public IP or localhost): " DOMAIN
+
+# Ask for port configuration (optional)
+read -p "Enter HTTP port (leave empty to use 80): " HTTP_PORT
+read -p "Enter HTTPS port (leave empty to use 443): " HTTPS_PORT
+
+# Set default ports if not specified
+HTTP_PORT=${HTTP_PORT:-80}
+HTTPS_PORT=${HTTPS_PORT:-443}
 
 # Build Docker image
 echo "Building Docker image..."
@@ -76,9 +84,9 @@ docker build -t unity-webgl-nginx .
 # Run Docker container
 echo "Starting container..."
 if [ -z "$DOMAIN" ]; then
-    docker run -d --name unity-webgl-nginx -p 80:80 -p 443:443 unity-webgl-nginx
+    docker run -d --name unity-webgl-nginx -p $HTTP_PORT:80 -p $HTTPS_PORT:443 unity-webgl-nginx
 else
-    docker run -d --name unity-webgl-nginx -p 80:80 -p 443:443 -e DOMAIN="$DOMAIN" unity-webgl-nginx
+    docker run -d --name unity-webgl-nginx -p $HTTP_PORT:80 -p $HTTPS_PORT:443 -e DOMAIN="$DOMAIN" unity-webgl-nginx
 fi
 
 # Get container IP
@@ -87,10 +95,14 @@ CONTAINER_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddres
 echo "============================="
 echo "Unity WebGL server is running!"
 if [ -z "$DOMAIN" ]; then
-    PUBLIC_IP=$(wget -qO- https://ipinfo.io/ip || echo "localhost")
-    echo "Access your application at: https://$PUBLIC_IP"
+    echo "Access your application at:"
+    echo "- Locally: https://localhost${HTTPS_PORT:+:$HTTPS_PORT}"
+    PUBLIC_IP=$(wget -qO- https://ipinfo.io/ip || echo "Not available")
+    if [ "$PUBLIC_IP" != "Not available" ]; then
+        echo "- Public: https://$PUBLIC_IP${HTTPS_PORT:+:$HTTPS_PORT}"
+    fi
 else
-    echo "Access your application at: https://$DOMAIN"
+    echo "Access your application at: https://$DOMAIN${HTTPS_PORT:+:$HTTPS_PORT}"
     echo "Make sure your DNS points to your server's IP address."
 fi
 echo "Container IP: $CONTAINER_IP"

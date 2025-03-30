@@ -69,7 +69,15 @@ $utf8NoBomEncoding = New-Object System.Text.UTF8Encoding $false
 [System.IO.File]::WriteAllText("$pwd\docker-entrypoint.sh", $entrypointContent, $utf8NoBomEncoding)
 
 # Ask for domain (optional)
-$DOMAIN = Read-Host "Enter your domain name (leave empty to use public IP)"
+$DOMAIN = Read-Host "Enter your domain name (leave empty to use public IP or localhost)"
+
+# Ask for port configuration (optional)
+$HTTP_PORT = Read-Host "Enter HTTP port (leave empty to use 80)"
+$HTTPS_PORT = Read-Host "Enter HTTPS port (leave empty to use 443)"
+
+# Set default ports if not specified
+if ([string]::IsNullOrEmpty($HTTP_PORT)) { $HTTP_PORT = "80" }
+if ([string]::IsNullOrEmpty($HTTPS_PORT)) { $HTTPS_PORT = "443" }
 
 # Build Docker image
 Write-Host "Building Docker image..." -ForegroundColor Yellow
@@ -78,9 +86,9 @@ docker build -t unity-webgl-nginx .
 # Run Docker container
 Write-Host "Starting container..." -ForegroundColor Yellow
 if ([string]::IsNullOrEmpty($DOMAIN)) {
-    docker run -d --name unity-webgl-nginx -p 80:80 -p 443:443 unity-webgl-nginx
+    docker run -d --name unity-webgl-nginx -p ${HTTP_PORT}:80 -p ${HTTPS_PORT}:443 unity-webgl-nginx
 } else {
-    docker run -d --name unity-webgl-nginx -p 80:80 -p 443:443 -e DOMAIN="$DOMAIN" unity-webgl-nginx
+    docker run -d --name unity-webgl-nginx -p ${HTTP_PORT}:80 -p ${HTTPS_PORT}:443 -e DOMAIN="$DOMAIN" unity-webgl-nginx
 }
 
 # Get container IP
@@ -89,14 +97,18 @@ $CONTAINER_IP = docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddre
 Write-Host "=============================" -ForegroundColor Cyan
 Write-Host "Unity WebGL server is running!" -ForegroundColor Green
 if ([string]::IsNullOrEmpty($DOMAIN)) {
+    Write-Host "Access your application at:" -ForegroundColor Green
+    $portSuffix = if ($HTTPS_PORT -ne "443") { ":$HTTPS_PORT" } else { "" }
+    Write-Host "- Locally: https://localhost$portSuffix" -ForegroundColor Green
     try {
         $PUBLIC_IP = Invoke-RestMethod -Uri "https://ipinfo.io/ip"
-        Write-Host "Access your application at: https://$PUBLIC_IP" -ForegroundColor Green
+        Write-Host "- Public: https://$PUBLIC_IP$portSuffix" -ForegroundColor Green
     } catch {
-        Write-Host "Could not determine public IP. Access your application using your public IP address." -ForegroundColor Yellow
+        Write-Host "Could not determine public IP." -ForegroundColor Yellow
     }
 } else {
-    Write-Host "Access your application at: https://$DOMAIN" -ForegroundColor Green
+    $portSuffix = if ($HTTPS_PORT -ne "443") { ":$HTTPS_PORT" } else { "" }
+    Write-Host "Access your application at: https://$DOMAIN$portSuffix" -ForegroundColor Green
     Write-Host "Make sure your DNS points to your server's IP address." -ForegroundColor Yellow
 }
 Write-Host "Container IP: $CONTAINER_IP" -ForegroundColor Yellow

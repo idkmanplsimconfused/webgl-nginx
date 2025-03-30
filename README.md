@@ -5,7 +5,8 @@ This package provides an easy way to host your Unity WebGL application with Ngin
 ## Features
 
 - HTTPS support with automatic self-signed certificate generation
-- Support for domain names or public IP access
+- Support for domain names, public IP, or localhost access
+- Configurable HTTP/HTTPS ports
 - Optimized Nginx configuration for Unity WebGL applications
 - Support for compressed WebGL files (.gz and .br)
 - Brotli compression enabled for better performance
@@ -38,7 +39,7 @@ Place your Unity WebGL build files in this directory. For example:
    ./setup.sh
    ```
 
-3. Follow the prompts to enter an optional domain name.
+3. Follow the prompts to enter optional domain name and ports.
 
 ### Windows
 
@@ -49,16 +50,28 @@ Place your Unity WebGL build files in this directory. For example:
    .\setup.ps1
    ```
 
-2. Follow the prompts to enter an optional domain name.
+2. Follow the prompts to enter optional domain name and ports.
 
 ## Accessing Your Application
 
-- If you provided a domain name, access your app at `https://your-domain.com`
-- If you didn't provide a domain, access your app at `https://your-public-ip`
+- **Local Access**: `https://localhost[:port]`
+- **Public Access**: `https://your-public-ip[:port]`
+- **Domain Access**: `https://your-domain[:port]` (if domain was provided)
 
 For sub-applications:
-- Main application: `https://your-domain.com` or `https://your-public-ip`
-- Sub-application: `https://your-domain.com/x` or `https://your-public-ip/x`
+- Main application: `https://localhost[:port]` or `https://your-domain[:port]`
+- Sub-application: `https://localhost[:port]/x` or `https://your-domain[:port]/x`
+
+## Custom Ports
+
+If ports 80 and 443 are already in use on your machine, you can specify alternative ports during setup:
+- HTTP port: The port to use for HTTP traffic (default: 80)
+- HTTPS port: The port to use for HTTPS traffic (default: 443)
+
+For example, if you specify 8080 for HTTP and 8443 for HTTPS, access your app at:
+```
+https://localhost:8443
+```
 
 ## Managing the Docker Container
 
